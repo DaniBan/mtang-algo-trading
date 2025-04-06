@@ -14,6 +14,8 @@ from strategies import (
     RsiOscillator
 )
 
+from pathlib import Path
+
 # Load env vars
 load_dotenv()
 
@@ -74,8 +76,6 @@ def main():
                                                    timeframe=timeframe,
                                                    date_from=datetime(2024, 12, 1),
                                                    date_to=datetime.now())
-        # rates_df = calculate_support_resistance(rates_df, window=300)
-        # print(rates_df["support"])
 
         # peaks, _ = find_peaks(rates_df["high"], distance=20, prominence=.001)
         # peaks_values = rates_df.iloc[peaks]["high"].values
@@ -95,18 +95,22 @@ def main():
         })
         try:
             bt = Backtest(bt_data, RsiOscillator, cash=10_000)
-            stats = bt.optimize(
-                upper_bound=range(50, 57, 5),
-                lower_bound=range(10, 45, 5),
-                rsi_window=range(10, 30, 2),
-                maximize="Win Rate [%]"
-            )
-            # stats = bt.run()
+            # stats = bt.optimize(
+            #     upper_bound=range(50, 57, 5),
+            #     lower_bound=range(10, 45, 5),
+            #     rsi_window=range(10, 30, 2),
+            #     maximize="Win Rate [%]"
+            # )
+            stats = bt.run()
             print(stats)
             lb = stats["_strategy"].lower_bound
             ub = stats["_strategy"].upper_bound
             window = stats["_strategy"].rsi_window
-            bt.plot(filename=f"../backtests/lb{lb}_ub{ub}_win{window}")
+
+            # Plot backtest stats
+            plot_path: Path = Path(f"../backtests/lb{lb}_ub{ub}_win{window}")
+            plot_path.mkdir(exist_ok=True, parents=True)
+            bt.plot(filename=str(plot_path))
         except Exception:
             logging.exception("Exception occurred while backtesting")
 

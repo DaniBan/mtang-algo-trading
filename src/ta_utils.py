@@ -4,9 +4,8 @@ import MetaTrader5 as mt5
 
 def calculate_support_resistance(rates: pd.DataFrame, window: int = 50, inplace: bool = False) -> pd.DataFrame:
     """
-    Compute support and rezistance levels using rolling min and max
+    Compute support and resistance levels using rolling min and max
     """
-
     if not inplace:
         rates = rates.copy()
 
@@ -19,7 +18,6 @@ def calculate_pivot_points(rates: pd.DataFrame, inplace: bool = False) -> pd.Dat
     """
     Calculate pivot points, support, and resistance levels.
     """
-
     if not inplace:
         rates = rates.copy()
 
