@@ -1,0 +1,16 @@
+[project]
+name = "algo-trading"
+version = "0.0.1"
+dependencies = [
+    "pandas~=2.2.3",
+    "numpy~=1.26.4",
+    "matplotlib~=3.8.4",
+    "requests~=2.32.3",
+    "MetaTrader5",
+    "backtrader",
+    "scipy",
+    "mplfinance",
+    "backtesting",
+    "TA-Lib", # Install ta-lib binaries for this to work
+    "python-dotenv"
+]
