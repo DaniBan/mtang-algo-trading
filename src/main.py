@@ -5,16 +5,13 @@ from datetime import datetime
 import MetaTrader5 as mt5
 import matplotlib
 import matplotlib.pyplot as plt
-from backtesting import Backtest
+import schedule
+import time
 from dotenv import load_dotenv
 from pandas.plotting import register_matplotlib_converters
 
-from mt5_connection import MT5Connection
-from strategies import (
-    RsiOscillator
-)
-
-from pathlib import Path
+from metatrader import MT5Connection
+from trading_analysis import check_rsi_signal
 
 # Load env vars
 load_dotenv()
@@ -67,53 +64,43 @@ def plot_data(rates_df, support_lines=None, resistance_lines=None):
     plt.show()
 
 
+def rsi_strategy(symbol: str, timeframe: int, risk_per_trade: float, risk_in_pips: int, reward_to_risk_ratio: int):
+    """
+    Main trading logic to run at each scheduled interval.
+    Fetches recent market data, checks for RSI signals, and places orders.
+    """
+    logging.info("Executing RSI trading logic...")
+    rates = MT5Connection.fetch_rates(symbol, timeframe, 0, 50)
+
+    # Check RSI signal
+    signal = check_rsi_signal(rates)
+    # if signal == "BUY":
+    # place_order(symbol, "BUY", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
+    # elif signal == "SELL":
+    # place_order(symbol, "SELL", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
+
+    logging.info(f"Signal: {signal}")
+
+
 def main():
     symbol = "EURAUD"
-    timeframe = mt5.TIMEFRAME_M15
+    timeframe = mt5.TIMEFRAME_M1
 
     with MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")):
-        rates_df = MT5Connection.fetch_rates_range(symbol=symbol,
-                                                   timeframe=timeframe,
-                                                   date_from=datetime(2024, 12, 1),
-                                                   date_to=datetime.now())
+        # Schedule the RSI-based trading logic to run every minute
+        schedule.every(1).minute.at(":01").do(
+            rsi_strategy,
+            symbol=symbol,
+            timeframe=timeframe,
+            risk_per_trade=0.02,
+            risk_in_pips=30,
+            reward_to_risk_ratio=2
+        )
 
-        # peaks, _ = find_peaks(rates_df["high"], distance=20, prominence=.001)
-        # peaks_values = rates_df.iloc[peaks]["high"].values
-        # resistance_lines = [np.full(len(rates_df), val) for val in peaks_values]
-        #
-        # peaks, _ = find_peaks(-rates_df["low"], distance=20, prominence=.001)
-        # peaks_values = rates_df.iloc[peaks]["high"].values
-        # support_lines = [np.full(len(rates_df), val) for val in peaks_values]
-
-        bt_data = rates_df[["time", "open", "high", "low", "close", "tick_volume"]]
-        bt_data = bt_data.rename(columns={
-            "open": "Open",
-            "high": "High",
-            "low": "Low",
-            "close": "Close",
-            "tick_volume": "Volume"
-        })
-        try:
-            bt = Backtest(bt_data, RsiOscillator, cash=10_000)
-            # stats = bt.optimize(
-            #     upper_bound=range(50, 57, 5),
-            #     lower_bound=range(10, 45, 5),
-            #     rsi_window=range(10, 30, 2),
-            #     maximize="Win Rate [%]"
-            # )
-            stats = bt.run()
-            print(stats)
-            lb = stats["_strategy"].lower_bound
-            ub = stats["_strategy"].upper_bound
-            window = stats["_strategy"].rsi_window
-
-            # Plot backtest stats
-            plot_path: Path = Path(f"../backtests/lb{lb}_ub{ub}_win{window}")
-            plot_path.mkdir(exist_ok=True, parents=True)
-            bt.plot(filename=str(plot_path))
-        except Exception:
-            logging.exception("Exception occurred while backtesting")
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

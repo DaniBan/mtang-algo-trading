@@ -6,6 +6,7 @@ dependencies = [
     "numpy~=1.26.4",
     "matplotlib~=3.8.4",
     "requests~=2.32.3",
+    "schedule~=1.2.2",
     "MetaTrader5",
     "backtrader",
     "scipy",

@@ -1,8 +1,7 @@
+import numpy as np
+import talib
 from backtesting import Strategy
 from backtesting.lib import crossover
-
-import talib
-import pandas as pd
 
 
 class SupportResistance(Strategy):
@@ -32,11 +31,33 @@ class RsiOscillator(Strategy):
     lower_bound = 30
     rsi_window = 14
 
+    # Risk-management parameters
+    trade_risk_pct = 2  # Percentage of the account to risk (2%)
+    sl_pct = 0.4  # Stop loss in percentage (0.4%)
+    tp_pct = 0.4  # Take profit in percentage (0.4%)
+
+    def __init__(self, broker, data, params):
+        super().__init__(broker, data, params)
+        self.rsi = None
+        self.upper_rsi = None
+        self.lower_rsi = None
+
     def init(self):
         self.rsi = self.I(talib.RSI, self.data.Close, self.rsi_window)
+        self.upper_rsi = np.full_like(self.rsi, self.upper_bound)
+        self.lower_rsi = np.full_like(self.rsi, self.lower_bound)
 
     def next(self):
-        if crossover(self.rsi, self.upper_bound):
-            self.position.close()
-        elif crossover(self.lower_bound, self.rsi):
-            self.buy()
+        price = float(self.data.Close[-1])
+
+        if crossover(self.lower_rsi, self.rsi):
+            # Compute stop-loss and take-profit prices
+            sl_price = price - self.sl_pct / 100 * price
+            tp_price = price + self.tp_pct / 100 * price
+
+            # Compute position size
+            risk_amount = self.equity * (self.trade_risk_pct / 100)
+            risk_per_unit = (price - sl_price) / price
+            position_size = risk_amount / risk_per_unit / 100_000
+
+            self.buy(size=position_size, sl=sl_price, tp=tp_price)

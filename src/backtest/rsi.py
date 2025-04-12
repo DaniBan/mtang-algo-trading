@@ -1,0 +1,67 @@
+import logging
+import os
+from datetime import datetime
+from pathlib import Path
+
+import MetaTrader5 as mt5
+import matplotlib
+from backtesting import Backtest
+from dotenv import load_dotenv
+from pandas.plotting import register_matplotlib_converters
+
+from backtest.strategies import (
+    RsiOscillator
+)
+from metatrader import MT5Connection
+
+# Load env vars
+load_dotenv()
+
+# Register matplotlib converters
+register_matplotlib_converters()
+matplotlib.use("TkAgg")
+
+# Configure logging
+level = logging.DEBUG
+fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
+logging.basicConfig(level=level, format=fmt)
+
+
+def main() -> None:
+    symbol = "USDCAD"
+    timeframe = mt5.TIMEFRAME_M15
+
+    with MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")):
+        rates_df = MT5Connection.fetch_rates_range(symbol=symbol,
+                                                   timeframe=timeframe,
+                                                   date_from=datetime(2025, 4, 5),
+                                                   date_to=datetime.now())
+
+        bt_data = rates_df[["time", "open", "high", "low", "close", "tick_volume"]]
+        bt_data = bt_data.rename(columns={
+            "open": "Open",
+            "high": "High",
+            "low": "Low",
+            "close": "Close",
+            "tick_volume": "Volume"
+        })
+        try:
+            bt = Backtest(bt_data, RsiOscillator, cash=10_000)
+
+            stats = bt.run()
+            logging.info(stats)
+
+            lb = stats["_strategy"].lower_bound
+            ub = stats["_strategy"].upper_bound
+            window = stats["_strategy"].rsi_window
+
+            # Plot backtest stats
+            plot_path: Path = Path(__file__).parent.parent.parent / f"backtests/lb{lb}_ub{ub}_win{window}"
+            plot_path.mkdir(exist_ok=True, parents=True)
+            bt.plot(filename=str(plot_path))
+        except Exception:
+            logging.exception("Exception occurred while backtesting")
+
+
+if __name__ == "__main__":
+    main()
