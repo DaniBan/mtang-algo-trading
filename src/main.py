@@ -24,6 +24,7 @@ matplotlib.use("TkAgg")
 level = logging.DEBUG
 fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
 logging.basicConfig(level=level, format=fmt)
+logger = logging.getLogger(__file__)
 
 
 def plot_data(rates_df, support_lines=None, resistance_lines=None):
@@ -47,7 +48,7 @@ def rsi_strategy(symbol: str, timeframe: int, risk_per_trade: float, risk_in_pip
     Main trading logic to run at each scheduled interval.
     Fetches recent market data, checks for RSI signals, and places orders.
     """
-    logging.info("Executing RSI trading logic...")
+    logger.info("Executing RSI trading logic...")
     rates = MT5Connection.fetch_rates(symbol, timeframe, 0, 50)
 
     # Check RSI signal
@@ -57,7 +58,7 @@ def rsi_strategy(symbol: str, timeframe: int, risk_per_trade: float, risk_in_pip
     # elif signal == "SELL":
     # place_order(symbol, "SELL", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
 
-    logging.info(f"Signal: {signal}")
+    logger.info(f"Signal: {signal}")
 
 
 def main():

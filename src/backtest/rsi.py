@@ -26,6 +26,7 @@ matplotlib.use("TkAgg")
 level = logging.DEBUG
 fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
 logging.basicConfig(level=level, format=fmt)
+logger = logging.getLogger(__file__)
 
 
 def main() -> None:
@@ -48,7 +49,7 @@ def main() -> None:
             #     rsi_window=range(10, 30, 2),
             #     maximize="Return [%]"
             # )
-            logging.info(f"STATS\n=============================================\n{stats}")
+            logger.info(f"STATS\n=============================================\n{stats}")
 
             lb = stats["_strategy"].lower_bound
             ub = stats["_strategy"].upper_bound
@@ -59,7 +60,7 @@ def main() -> None:
             plot_path.mkdir(exist_ok=True, parents=True)
             bt.plot(filename=str(plot_path))
         except Exception:
-            logging.exception("Exception occurred while backtesting")
+            logger.exception("Exception occurred while backtesting")
 
 
 if __name__ == "__main__":
