@@ -36,7 +36,7 @@ def main() -> None:
     with (MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")) as mt5_conn):
         rates = mt5_conn.fetch_rates_range(symbol=symbol,
                                            timeframe=timeframe,
-                                           date_from=datetime(2024, 1, 1),
+                                           date_from=datetime(2025, 1, 1),
                                            date_to=datetime.now())
 
         try:
@@ -57,7 +57,6 @@ def main() -> None:
 
             # Plot backtest stats
             plot_path: Path = Path(__file__).parent.parent.parent / f"backtests/lb{lb}_ub{ub}_win{window}"
-            plot_path.mkdir(exist_ok=True, parents=True)
             bt.plot(filename=str(plot_path))
         except Exception:
             logger.exception("Exception occurred while backtesting")
