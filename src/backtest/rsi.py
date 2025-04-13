@@ -1,11 +1,12 @@
 import logging
+import multiprocessing
 import os
 from datetime import datetime
 from pathlib import Path
 
 import MetaTrader5 as mt5
 import matplotlib
-from backtesting import Backtest
+from backtesting import Backtest, backtesting
 from dotenv import load_dotenv
 from pandas.plotting import register_matplotlib_converters
 
@@ -31,25 +32,23 @@ def main() -> None:
     symbol = "USDCAD"
     timeframe = mt5.TIMEFRAME_M15
 
-    with MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")):
-        rates_df = MT5Connection.fetch_rates_range(symbol=symbol,
-                                                   timeframe=timeframe,
-                                                   date_from=datetime(2025, 4, 5),
-                                                   date_to=datetime.now())
+    with (MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")) as mt5_conn):
+        rates = mt5_conn.fetch_rates_range(symbol=symbol,
+                                           timeframe=timeframe,
+                                           date_from=datetime(2024, 1, 1),
+                                           date_to=datetime.now())
 
-        bt_data = rates_df[["time", "open", "high", "low", "close", "tick_volume"]]
-        bt_data = bt_data.rename(columns={
-            "open": "Open",
-            "high": "High",
-            "low": "Low",
-            "close": "Close",
-            "tick_volume": "Volume"
-        })
         try:
-            bt = Backtest(bt_data, RsiOscillator, cash=10_000)
-
+            bt = Backtest(rates, RsiOscillator, cash=10_000)
+            backtesting.Pool = multiprocessing.Pool
             stats = bt.run()
-            logging.info(stats)
+            # stats = bt.optimize(
+            #     upper_bound=range(50, 90, 5),
+            #     lower_bound=range(10, 45, 5),
+            #     rsi_window=range(10, 30, 2),
+            #     maximize="Return [%]"
+            # )
+            logging.info(f"STATS\n=============================================\n{stats}")
 
             lb = stats["_strategy"].lower_bound
             ub = stats["_strategy"].upper_bound

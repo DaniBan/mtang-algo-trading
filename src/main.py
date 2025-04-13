@@ -26,28 +26,6 @@ fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
 logging.basicConfig(level=level, format=fmt)
 
 
-def download_rates(dst_path: str, symbol: str, timeframe: int, start_pos: int, count: int):
-    # Fetch rates
-    rates_frame = MT5Connection.fetch_rates(symbol=symbol, timeframe=timeframe, start_pos=start_pos, count=count)
-
-    # Save as CSV to dst_path
-    out_file = os.path.join(dst_path, f"{symbol}_{timeframe}_s{start_pos}_c{count}.csv")
-    rates_frame.to_csv(out_file, index=False)
-    logging.info(f"Rates saved to {out_file}")
-
-
-def download_rates_range(dst_path: str, symbol: str, timeframe: int, date_from: datetime, date_to: datetime):
-    # Fetch rates
-    rates_frame = MT5Connection.fetch_rates_range(symbol=symbol, timeframe=timeframe, date_from=date_from,
-                                                  date_to=date_to)
-
-    # Save as CSV to dst_path
-    file_name = f"{symbol}_{timeframe}_{date_from.strftime('%d_%m_%Y')}-{date_to.strftime('%d_%m_%Y')}.csv"
-    out_file = os.path.join(dst_path, file_name)
-    rates_frame.to_csv(out_file, index=False)
-    logging.info(f"Rates saved to {out_file}")
-
-
 def plot_data(rates_df, support_lines=None, resistance_lines=None):
     plt.figure(figsize=(12, 6))
     plt.plot(rates_df["time"], rates_df["close"], label="Close Price", color="blue")
