@@ -8,10 +8,12 @@ dependencies = [
     "requests~=2.32.3",
     "schedule~=1.2.2",
     "MetaTrader5",
-    "backtrader",
-    "scipy",
-    "mplfinance",
-    "backtesting",
-    "TA-Lib", # Install ta-lib binaries for this to work
-    "python-dotenv"
+    "backtrader~=1.9.78.123",
+    "scipy~=1.15.2",
+    "mplfinance~=0.12.10b0",
+    "backtesting~=0.6.4",
+    "TA-Lib~=0.6.3", # Install ta-lib binaries for this to work
+    "python-dotenv~=1.1.0",
+    "pytest~=8.3.5",
+    "pytest-mock"
 ]

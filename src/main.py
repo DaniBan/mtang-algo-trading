@@ -24,7 +24,7 @@ matplotlib.use("TkAgg")
 level = logging.DEBUG
 fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
 logging.basicConfig(level=level, format=fmt)
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def plot_data(rates_df, support_lines=None, resistance_lines=None):
@@ -63,27 +63,43 @@ def rsi_strategy(connection: MT5Connection, symbol: str, timeframe: int, risk_pe
 
 
 def main():
-    symbol = "EURAUD"
+    symbol = "USDCAD"
     timeframe = mt5.TIMEFRAME_M1
 
     with MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")) as mt_conn:
         # Schedule the RSI-based trading logic to run every minute
-        schedule.every(1).minute.at(":01").do(
-            rsi_strategy,
-            connection=mt_conn,
-            symbol=symbol,
-            timeframe=timeframe,
-            risk_per_trade=0.02,
-            risk_in_pips=30,
-            reward_to_risk_ratio=2,
-            timeperiod=10,
-            lower_bound=20,
-            upper_bound=75
-        )
+        # schedule.every(1).minute.at(":01").do(
+        #     rsi_strategy,
+        #     connection=mt_conn,
+        #     symbol=symbol,
+        #     timeframe=timeframe,
+        #     risk_per_trade=0.02,
+        #     risk_in_pips=30,
+        #     reward_to_risk_ratio=2,
+        #     timeperiod=10,
+        #     lower_bound=16,
+        #     upper_bound=75
+        # )
+        #
+        # while True:
+        #     schedule.run_pending()
+        #     time.sleep(1)
+        symbol_info_dict = mt5.symbol_info(symbol)._asdict()
+        keys = ["point", "trade_tick_value", "volume_min", "volume_step"]
+        for key in keys:
+            if type(symbol_info_dict[key]) is float and symbol_info_dict[key] > 0:
+                print(f"  {key}={symbol_info_dict[key]: .5f}")
+            else:
+                print(f"  {key}={symbol_info_dict[key]}")
+        print("\n\n==================================================\n\n")
+        for key, value in symbol_info_dict.items():
+            if type(value) is float and value > 0:
+                print(f"  {key}={value: .5f}")
+            else:
+                print(f"  {key}={value}")
 
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+        tick_info = mt5.symbol_info_tick(symbol)
+        print(tick_info._asdict())
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ matplotlib.use("TkAgg")
 level = logging.DEBUG
 fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
 logging.basicConfig(level=level, format=fmt)
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -42,18 +42,20 @@ def main() -> None:
         try:
             bt = Backtest(rates, RsiOscillator, cash=10_000)
             backtesting.Pool = multiprocessing.Pool
-            stats = bt.run()
-            # stats = bt.optimize(
-            #     upper_bound=range(50, 90, 5),
-            #     lower_bound=range(10, 45, 5),
-            #     rsi_window=range(10, 30, 2),
-            #     maximize="Return [%]"
-            # )
+            # stats = bt.run()
+            stats = bt.optimize(
+                upper_bound=range(50, 90, 5),
+                lower_bound=range(10, 45, 5),
+                rsi_window=range(10, 30, 2),
+                maximize="Return [%]"
+            )
             logger.info(f"STATS\n=============================================\n{stats}")
 
             lb = stats["_strategy"].lower_bound
             ub = stats["_strategy"].upper_bound
             window = stats["_strategy"].rsi_window
+
+            logger.info(f"LB: {lb}, UB: {ub}, WINDOW: {window}")
 
             # Plot backtest stats
             plot_path: Path = Path(__file__).parent.parent.parent / f"backtests/lb{lb}_ub{ub}_win{window}"
