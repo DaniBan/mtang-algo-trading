@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import MetaTrader5 as mt5
 import pytest
 
-from src.metatrader.order import place_order  # Replace 'your_module' with the actual module name
+from src.metatrader.order import place_order
 
 
 @pytest.fixture
