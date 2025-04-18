@@ -59,6 +59,7 @@ def main() -> None:
 
             # Plot backtest stats
             plot_path: Path = Path(__file__).parent.parent.parent / f"backtests/lb{lb}_ub{ub}_win{window}"
+            plot_path.mkdir(parents=True, exist_ok=True)
             bt.plot(filename=str(plot_path))
         except Exception:
             logger.exception("Exception occurred while backtesting")
