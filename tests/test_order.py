@@ -17,18 +17,25 @@ def mock_mt5(mocker):
     mocker.patch.object(mt5, "order_send")
 
 
+def create_mock_symbol_info(visible=True, point=0.00001, trade_tick_value=0.71682, volume_min=0.01, volume_step=0.01):
+    """
+    Create a mock symbol info object with the given parameters.
+    """
+    return MagicMock(
+        visible=visible,
+        point=point,
+        trade_tick_value=trade_tick_value,
+        volume_min=volume_min,
+        volume_step=volume_step
+    )
+
+
 def test_place_order_success_buy(mock_mt5):
     """
     Test successfully placing a BUY order.
     """
     # Mock symbol_info for USDCAD
-    mt5.symbol_info.return_value = MagicMock(
-        visible=True,
-        point=0.00001,
-        trade_tick_value=0.71682,
-        volume_min=0.01,
-        volume_step=0.01
-    )
+    mt5.symbol_info.return_value = create_mock_symbol_info()
 
     # Mock account_info
     mt5.account_info.return_value = MagicMock(balance=1000.0)
@@ -66,13 +73,7 @@ def test_place_order_success_sell(mock_mt5):
     Test successfully placing a BUY order.
     """
     # Mock symbol_info for USDCAD
-    mt5.symbol_info.return_value = MagicMock(
-        visible=True,
-        point=0.00001,
-        trade_tick_value=0.71682,
-        volume_min=0.01,
-        volume_step=0.01
-    )
+    mt5.symbol_info.return_value = create_mock_symbol_info()
 
     # Mock account_info
     mt5.account_info.return_value = MagicMock(balance=1000.0)
@@ -164,13 +165,7 @@ def test_place_order_order_send_failed(mock_mt5):
     Test placing an order with a failed order_send result.
     """
     # Mock symbol_info for USDCAD
-    mt5.symbol_info.return_value = MagicMock(
-        visible=True,
-        point=0.00001,
-        trade_tick_value=0.71682,
-        volume_min=0.01,
-        volume_step=0.01
-    )
+    mt5.symbol_info.return_value = create_mock_symbol_info()
 
     # Mock account_info
     mt5.account_info.return_value = MagicMock(balance=1000.0)
