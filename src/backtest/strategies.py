@@ -65,8 +65,8 @@ class RsiOscillator(Strategy):
 
     # Risk-management parameters
     risk_per_trade_pct = 2  # Percentage of the account to risk (2%)
-    sl_pct = 0.3  # Stop loss in percentage (0.3%)
-    tp_pct = 0.3  # Take profit in percentage (0.3%)
+    sl_pct = 0.1  # Stop loss in percentage
+    tp_pct = 0.1  # Take profit in percentage
 
     def __init__(self, broker, data, params):
         super().__init__(broker, data, params)
@@ -84,24 +84,24 @@ class RsiOscillator(Strategy):
 
         if crossover(self.rsi, self.lower_rsi):
             # Compute stop-loss and take-profit prices
-            sl_price = price - self.sl_pct / 100 * price
-            tp_price = price + self.tp_pct / 100 * price
+            sl_price = price - self.sl_pct / 100.0 * price
+            tp_price = price + self.tp_pct / 100.0 * price
 
             # Compute position size
-            risk_amount = self.equity * (self.risk_per_trade_pct / 100)
+            risk_amount = self.equity * (self.risk_per_trade_pct / 100.0)
             risk_per_unit = (price - sl_price) / price
-            position_size = risk_amount / risk_per_unit / 100_000
+            position_size = round(risk_amount / risk_per_unit / 100_000)
 
             self.buy(size=position_size, sl=sl_price, tp=tp_price)
 
         if crossover(self.upper_rsi, self.rsi):
             # Compute stop-loss and take-profit prices
-            sl_price = price + self.sl_pct / 100 * price
-            tp_price = price - self.tp_pct / 100 * price
+            sl_price = price + self.sl_pct / 100.0 * price
+            tp_price = price - self.tp_pct / 100.0 * price
 
             # Compute position size
-            risk_amount = self.equity * (self.risk_per_trade_pct / 100)
+            risk_amount = self.equity * (self.risk_per_trade_pct / 100.0)
             risk_per_unit = (sl_price - price) / price
-            position_size = risk_amount / risk_per_unit / 100_000
+            position_size = round(risk_amount / risk_per_unit / 100_000)
 
             self.sell(size=position_size, sl=sl_price, tp=tp_price)

@@ -26,7 +26,8 @@ def create_mock_symbol_info(visible=True, point=0.00001, trade_tick_value=0.7168
         point=point,
         trade_tick_value=trade_tick_value,
         volume_min=volume_min,
-        volume_step=volume_step
+        volume_step=volume_step,
+        filling_mode=mt5.ORDER_FILLING_IOC
     )
 
 

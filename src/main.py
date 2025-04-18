@@ -1,16 +1,15 @@
 import logging
 import os
-from datetime import datetime
+import time
 
 import MetaTrader5 as mt5
 import matplotlib
 import matplotlib.pyplot as plt
 import schedule
-import time
 from dotenv import load_dotenv
 from pandas.plotting import register_matplotlib_converters
 
-from metatrader import MT5Connection
+from metatrader import MT5Connection, place_order
 from ta import check_rsi_signal
 
 # Load env vars
@@ -43,23 +42,30 @@ def plot_data(rates_df, support_lines=None, resistance_lines=None):
     plt.show()
 
 
-def rsi_strategy(connection: MT5Connection, symbol: str, timeframe: int, risk_per_trade: float, risk_in_pips: int,
+def rsi_strategy(connection: MT5Connection, symbol: str, timeframe: int, risk_per_trade: float,
                  reward_to_risk_ratio: int, timeperiod: int, lower_bound: int, upper_bound: int):
     """
     Main trading logic to run at each scheduled interval.
     Fetches recent market data, checks for RSI signals, and places orders.
     """
-    logger.info("Executing RSI trading logic...")
     rates = connection.fetch_rates(symbol, timeframe, 0, 50)
+
+    # Compute risk in pips
+    tick = mt5.symbol_info_tick(symbol)
+    risk_pct = 0.1
 
     # Check RSI signal
     signal = check_rsi_signal(rates, timeperiod, lower_bound, upper_bound)
-    # if signal == "BUY":
-    # place_order(symbol, "BUY", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
-    # elif signal == "SELL":
-    # place_order(symbol, "SELL", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
-
     logger.info(f"Signal: {signal}")
+
+    if signal == "BUY":
+        price = tick.ask
+        risk_in_pips = round((price - risk_pct / 100 * price) * 10)
+        place_order(symbol, "BUY", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
+    elif signal == "SELL":
+        price = tick.bid
+        risk_in_pips = round((price + risk_pct / 100 * price) * 10)
+        place_order(symbol, "SELL", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
 
 
 def main():
@@ -68,38 +74,21 @@ def main():
 
     with MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")) as mt_conn:
         # Schedule the RSI-based trading logic to run every minute
-        # schedule.every(1).minute.at(":01").do(
-        #     rsi_strategy,
-        #     connection=mt_conn,
-        #     symbol=symbol,
-        #     timeframe=timeframe,
-        #     risk_per_trade=0.02,
-        #     risk_in_pips=30,
-        #     reward_to_risk_ratio=2,
-        #     timeperiod=10,
-        #     lower_bound=16,
-        #     upper_bound=75
-        # )
-        #
-        # while True:
-        #     schedule.run_pending()
-        #     time.sleep(1)
-        symbol_info_dict = mt5.symbol_info(symbol)._asdict()
-        keys = ["point", "trade_tick_value", "volume_min", "volume_step"]
-        for key in keys:
-            if type(symbol_info_dict[key]) is float and symbol_info_dict[key] > 0:
-                print(f"  {key}={symbol_info_dict[key]: .5f}")
-            else:
-                print(f"  {key}={symbol_info_dict[key]}")
-        print("\n\n==================================================\n\n")
-        for key, value in symbol_info_dict.items():
-            if type(value) is float and value > 0:
-                print(f"  {key}={value: .5f}")
-            else:
-                print(f"  {key}={value}")
+        schedule.every(1).minute.at(":01").do(
+            rsi_strategy,
+            connection=mt_conn,
+            symbol=symbol,
+            timeframe=timeframe,
+            risk_per_trade=0.02,
+            reward_to_risk_ratio=1,
+            timeperiod=10,
+            lower_bound=30,
+            upper_bound=55
+        )
 
-        tick_info = mt5.symbol_info_tick(symbol)
-        print(tick_info._asdict())
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
 
 if __name__ == "__main__":

@@ -43,14 +43,14 @@ def place_order(symbol: str, action: str, risk_per_trade: float = 0.02, risk_in_
     balance = account_info.balance
     tick_size = symbol_info.point
     tick_value = symbol_info.trade_tick_value or 1.0
+    pip_size = tick_size * 10  # Usually in FX, a pip equals 10 ticks
 
-    pip_size = tick_size * 10
+    # Compute stop loss and take profit
     entry_price = tick.ask if action.upper() == "BUY" else tick.bid
     stop_loss = entry_price - pip_size * risk_in_pips if action.upper() == "BUY" else (
             entry_price + pip_size * risk_in_pips)
-    take_profit = entry_price + (
-            pip_size * risk_in_pips * reward_to_risk_ratio) if action.upper() == "BUY" else entry_price - (
-            pip_size * risk_in_pips * reward_to_risk_ratio)
+    take_profit = entry_price + pip_size * risk_in_pips * reward_to_risk_ratio if action.upper() == "BUY" else (
+            entry_price - pip_size * risk_in_pips * reward_to_risk_ratio)
 
     # Calculate lot size dynamically based on risk
     risk_int_ticks = abs(entry_price - stop_loss) / tick_size
@@ -71,8 +71,9 @@ def place_order(symbol: str, action: str, risk_per_trade: float = 0.02, risk_in_
         "tp": take_profit,
         "deviation": 10,  # Maximum allowed deviation in points
         "magic": 234000,  # Custom magic number
+        "comment": "Algo trading",
         "type_time": mt5.ORDER_TIME_GTC,  # Good till cancel
-        "type_filling": mt5.ORDER_FILLING_IOC,
+        "type_filling": symbol_info.filling_mode
     }
 
     # Send the trade request
@@ -83,4 +84,17 @@ def place_order(symbol: str, action: str, risk_per_trade: float = 0.02, risk_in_
         return True
     else:
         logging.error(f"Order placement failed. Retcode: {result.retcode}")
+        if result.retcode == mt5.TRADE_RETCODE_INVALID_FILL:
+            logging.info("Retry order with filling mode mt5.ORDER_FILLING_FOK")
+            request["type_filling"] = mt5.ORDER_FILLING_FOK
+            result = mt5.order_send(request)
+
+            if result.retcode == mt5.TRADE_RETCODE_DONE:
+                logging.info(f"Order executed: {action} {lot_size} {symbol}. "
+                             f"Entry: {entry_price}, SL: {stop_loss}, TP: {take_profit}")
+                return True
+            else:
+                logging.error(f"Order placement failed. Retcode: {result.retcode}")
+                return False
+
         return False
