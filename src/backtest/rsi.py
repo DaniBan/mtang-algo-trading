@@ -23,7 +23,7 @@ register_matplotlib_converters()
 matplotlib.use("TkAgg")
 
 # Configure logging
-level = logging.DEBUG
+level = logging.INFO
 fmt = "[%(levelname)s]: %(asctime)s - %(message)s"
 logging.basicConfig(level=level, format=fmt)
 logger = logging.getLogger(__name__)
