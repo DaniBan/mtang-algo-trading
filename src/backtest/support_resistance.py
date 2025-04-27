@@ -30,23 +30,24 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
 	symbol = "USDCAD"
-	timeframe = mt5.TIMEFRAME_M15
+	timeframe = mt5.TIMEFRAME_H4
 
 	with (MT5Connection(int(os.getenv("ACCOUNT_ID")), os.getenv("PASSWORD"), os.getenv("MT5_SERVER")) as mt5_conn):
 		rates = mt5_conn.fetch_rates_range(symbol=symbol,
 										   timeframe=timeframe,
-										   date_from=datetime(2025, 4, 1),
+										   date_from=datetime(2024, 6, 1),
 										   date_to=datetime.now())
 
 		try:
 			bt = Backtest(rates, SupportResistance, cash=100_000)
-			# stats = bt.run()
-			stats = bt.optimize(
-				window=range(30, 150, 10),
-				level_pad=[i * 0.0001 for i in range(1, 13)],
-				prominence=[i * 0.001 for i in range(1, 11)],
-				maximize="Win Rate [%]"
-			)
+			stats = bt.run()
+			# stats = bt.optimize(
+			# 	window=range(30, 150, 10),
+			# 	level_pad=[i * 0.0001 for i in range(1, 11)],
+			# 	prominence=[i * 0.001 for i in range(1, 11)],
+			# 	maximize=lambda s: s["Return [%]"] * 0.7 + s["Win Rate [%]"] * 0.3
+			#
+			# )
 			logger.info(f"STATS\n=============================================\n{stats}")
 
 			window = stats["_strategy"].window
