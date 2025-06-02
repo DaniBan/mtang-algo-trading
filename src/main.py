@@ -56,7 +56,6 @@ def rsi_strategy(connection: MT5Connection, symbol: str, timeframe: int, risk_pe
 
     # Check RSI signal
     signal = check_rsi_signal(rates, timeperiod, lower_bound, upper_bound)
-    logger.info(f"Signal: {signal}")
 
     if signal == "BUY":
         price = tick.ask
@@ -66,6 +65,8 @@ def rsi_strategy(connection: MT5Connection, symbol: str, timeframe: int, risk_pe
         price = tick.bid
         risk_in_pips = round((price + risk_pct / 100 * price) * 10)
         place_order(symbol, "SELL", risk_per_trade, risk_in_pips, reward_to_risk_ratio)
+    else:
+        logger.info(f"Signal: {signal}")
 
 
 def main():

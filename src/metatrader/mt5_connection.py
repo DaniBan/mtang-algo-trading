@@ -73,7 +73,7 @@ class MT5Connection:
 
         # Save as CSV to dst_path
         out_file = dst_path / f"{symbol}_{timeframe}_s{start_pos}_c{count}.csv"
-        rates_frame.to_csv(out_file, index=False)
+        rates_frame.to_csv(out_file, index=True)
         logging.info(f"Rates saved to {out_file}")
 
     def download_rates_range(self, dst_path: Path, symbol: str, timeframe: int, date_from: datetime, date_to: datetime):
@@ -84,5 +84,5 @@ class MT5Connection:
         # Save as CSV to dst_path
         file_name = f"{symbol}_{timeframe}_{date_from.strftime('%d_%m_%Y')}-{date_to.strftime('%d_%m_%Y')}.csv"
         out_file = dst_path / file_name
-        rates_frame.to_csv(out_file, index=False)
+        rates_frame.to_csv(out_file, index=True)
         logging.info(f"Rates saved to {out_file}")

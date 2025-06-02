@@ -90,7 +90,7 @@ def place_order(symbol: str, action: str, risk_per_trade: float = 0.02, risk_in_
             result = mt5.order_send(request)
 
             if result.retcode == mt5.TRADE_RETCODE_DONE:
-                logging.info(f"Order executed: {action} {lot_size} {symbol}. "
+                logging.info(f"{action} {lot_size} {symbol}. "
                              f"Entry: {entry_price}, SL: {stop_loss}, TP: {take_profit}")
                 return True
             else:

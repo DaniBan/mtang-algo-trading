@@ -15,5 +15,6 @@ dependencies = [
     "TA-Lib~=0.6.3", # Install ta-lib binaries for this to work
     "python-dotenv~=1.1.0",
     "pytest~=8.3.5",
-    "pytest-mock"
+    "pytest-mock",
+    "tqdm~=4.67.1"
 ]
